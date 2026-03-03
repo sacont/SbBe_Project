@@ -16,23 +16,27 @@ RunAction::RunAction()
     analysisManager->SetH1YAxisTitle(0, "Counts");
 
     //1 histo1d
-    analysisManager->CreateH1("Edep-deltaKe", "Edep - KE", 1000, 0., 1) ; 
-    analysisManager->SetH1XAxisTitle(0, "Mev");
-    analysisManager->SetH1YAxisTitle(0, "Counts");
+    analysisManager->CreateH1("ToF", "ToF", 500, 0., 1000) ; 
+    analysisManager->SetH1XAxisTitle(1, "ns");
+    analysisManager->SetH1YAxisTitle(1, "Counts");
 
 
 
 
     /////////////////2D Histo//////////////////////
     //0 Histo2D
-    analysisManager->CreateH2("EdepVsToFXenon", "Energy Deposited vs Time of Flight", 1000, 0., 100, 1000, 0 , 500) ; 
+    analysisManager->CreateH2("EdepVsToFXenon", "Energy Deposited vs Time of Flight", 500, 80, 1000, 500, 0 , 1) ; 
     analysisManager->SetH2XAxisTitle(0, "ToF(ns)");
     analysisManager->SetH2YAxisTitle(0, "Edep (keV)");
     
     //1 Histo2D
-    analysisManager->CreateH2("EdepVsToFHydrogen", "Energy Deposited vs Time of Flight", 1000, 0., 100, 1000, 0 , 1200) ; 
-    analysisManager->SetH2XAxisTitle(0, "ToF(ns)");
-    analysisManager->SetH2YAxisTitle(0, "Edep (keV)");
+    analysisManager->CreateH2("EdepVsToFHydrogen", "Energy Deposited vs Time of Flight", 500, 86, 1000, 500, 0 , 30) ; 
+    analysisManager->SetH2XAxisTitle(1, "ToF(ns)");
+    analysisManager->SetH2YAxisTitle(1, "Edep (keV)");
+    //2 Histo2D
+    analysisManager->CreateH2("EdepVsToFEJ309", "Energy Deposited vs Time of Flight", 1000, 308., 1000, 1000, 0 , 30) ; 
+    analysisManager->SetH2XAxisTitle(2, "ToF(ns)");
+    analysisManager->SetH2YAxisTitle(2, "Edep (keV)");
 
 
 
@@ -40,7 +44,7 @@ RunAction::RunAction()
 
     ////////////nTuples//////////////
     //0 ntuple Gammas
-    analysisManager->CreateNtuple("GammaEdep", "Gamma energy deposits in NaI");
+    analysisManager->CreateNtuple("Neutron", "Neutron");
     analysisManager->CreateNtupleDColumn("fGlobalTime");
     analysisManager->CreateNtupleIColumn("EventId");
     analysisManager->FinishNtuple(0);
@@ -65,7 +69,7 @@ void RunAction::BeginOfRunAction(const G4Run *run)
     std::stringstream strRunID;
     strRunID << runID;
 
-    analysisManager->OpenFile("output" + strRunID.str() + ".root");
+    analysisManager->OpenFile("0degree" + strRunID.str() + ".root");
     
 
 }

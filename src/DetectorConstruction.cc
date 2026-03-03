@@ -22,9 +22,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   //////////////////World Construction/////////////////////
   
   //Dimension Constants
-  G4double xWorld = 1. * m;
-  G4double yWorld = 1. * m;
-  G4double zWorld = 1. * m;
+  G4double xWorld = 1.5 * m;
+  G4double yWorld = 1.5 * m;
+  G4double zWorld = 1.5 * m;
   
   
   //World Material
@@ -40,7 +40,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   
   //Dimensions and Material Constants
   double inch = 2.54 * cm;
-  G4double env_sizeXY = 50 * cm, env_sizeZ = 50 * cm;
+  G4double env_sizeXY = 100 * cm, env_sizeZ = 100 * cm;
   G4Material* env_mat = nist->FindOrBuildMaterial("G4_AIR");
 
 
@@ -82,10 +82,45 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   logicLXe = new G4LogicalVolume(solidLXe, LXe_H2, "logicLXe");
 
   // Place inside your environment volume 
-  G4VPhysicalVolume* physLXe = new G4PVPlacement(nullptr, G4ThreeVector(0,0,0), logicLXe, "LXe", logicEnv, false, 0, checkOverlaps);
+  G4VPhysicalVolume* physLXe = new G4PVPlacement(nullptr, G4ThreeVector(0, 0,0), logicLXe, "LXe", logicEnv, false, 0, checkOverlaps);
   
   /////////////Reflector//////////////
   
+  //Constants
+  G4double rIn_Reflect = 0.0 * inch;
+  G4double rOut_Reflect = 3.0 * inch;
+  G4double h_Reflect =  3.0 * inch;
+  G4double hz_Reflect = h_Reflect * 0.5 ;
+  //Material
+  G4Material* EJ309 = new G4Material("EJ309", 0.964*g/cm3, 2);           
+
+  G4Element* elH = nist->FindOrBuildElement("H");
+  G4Element* elC = nist->FindOrBuildElement("C");
+  // mass fractions 
+  EJ309->AddElement(elC, 0.906);
+  EJ309->AddElement(elH, 0.094);
+
+
+  //Solid - Logic - Placement
+  // 1) Make a rotation matrix
+  auto rot = new G4RotationMatrix();
+
+  // Example: 
+  rot->rotateY(90.*deg);
+  rot->rotateX(0.*deg);
+  rot->rotateZ(0.*deg);
+
+
+  G4Tubs* solidReflect = new G4Tubs("solidReflect", rIn_Reflect, rOut_Reflect, hz_Reflect, 0.*deg, 360.*deg);
+  logicReflect = new G4LogicalVolume(solidReflect, EJ309, "logicReflect");
+  G4VPhysicalVolume* physReflect = new G4PVPlacement(rot, G4ThreeVector(50 *cm , 0.0*cm,0), logicReflect, "Reflect", logicEnv, false, 0, checkOverlaps);
+
+
+
+
+
+
+
 
   ///////////////////Colors :>///////////////////// 
   G4VisAttributes* Magenta = new G4VisAttributes(G4Colour(1.0, 0.0, 1.0, 0.5)); //Magenta
@@ -106,17 +141,17 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   Black->SetForceSolid(true);
 
 
-  //PVT
+  //logics Colors
   logicLXe->SetVisAttributes(Yellow);
-
+  logicReflect->SetVisAttributes(SlateBlue);
   return physWorld;
 }
 
 void DetectorConstruction::ConstructSDandField()
 {
     SensitiveDetector *sensDet = new SensitiveDetector("SensitiveDetector");
-    logicLXe->SetSensitiveDetector(sensDet); //Black
-    
+    logicLXe->SetSensitiveDetector(sensDet); //Yellow
+    logicReflect->SetSensitiveDetector(sensDet); //Blue
     G4SDManager::GetSDMpointer()->AddNewDetector(sensDet);
 }
     

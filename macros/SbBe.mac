@@ -13,13 +13,13 @@
 /gps/time 0 ns
 # Position distribution (point source at origin)
 /gps/pos/type Point
-/gps/pos/centre 0 0 -3 cm
+/gps/pos/centre -20 0 0 cm
 
 # Isotropic emission
-/gps/ang/type iso
+#/gps/ang/type iso
 
 # Beam emission
-#/gps/direction 0 0 1
+/gps/direction 1 0 0
 
 
 # Generate events

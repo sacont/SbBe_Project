@@ -34,7 +34,7 @@ private:
     
 
     G4LogicalVolume *logicLXe;
-    
+    G4LogicalVolume *logicReflect;
     
     virtual void ConstructSDandField();
 

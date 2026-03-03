@@ -32,6 +32,14 @@ private:
 
     G4double fTotalEnergyDeposited;
     G4double fEdepPVT;
+
+    G4double ti;
+    G4double tf;
+    G4double Tof;
+    bool gotTi;
+    bool gotTf;
+    bool filledTof;
+    bool fEnteredTarget = false;
     
 };
 

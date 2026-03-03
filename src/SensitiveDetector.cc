@@ -4,6 +4,10 @@
 SensitiveDetector::SensitiveDetector(G4String name) : G4VSensitiveDetector(name)
 {
     fTotalEnergyDeposited = 0.;
+    ti = 0;
+    tf = 0;
+    Tof = 0;
+    gotTi = gotTf = filledTof = false;
 }
 
 SensitiveDetector::~SensitiveDetector()
@@ -13,9 +17,12 @@ SensitiveDetector::~SensitiveDetector()
 
 void SensitiveDetector::Initialize(G4HCofThisEvent *)
 {
-    
+    ti = 0;
+    tf = 0;
+    Tof = 0;
+    gotTi = gotTf = filledTof = false;
     fTotalEnergyDeposited = 0. ;
-   
+    fEnteredTarget = false;
 
 }
 
@@ -29,6 +36,14 @@ G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
     
     G4StepPoint *preStepPoint = aStep->GetPreStepPoint();
     G4StepPoint* postStep = aStep->GetPostStepPoint();
+
+    G4ThreeVector prePos  = preStepPoint->GetPosition();
+    G4ThreeVector postPos = postStep->GetPosition();
+    G4double x = postPos.x()/cm;
+    G4double y = postPos.y()/cm;
+    G4double z = postPos.z()/cm;
+
+
     G4double fGlobalTime = preStepPoint->GetGlobalTime();
     G4Track* track = aStep->GetTrack();
     G4StepStatus stepStatus = preStepPoint->GetStepStatus();
@@ -53,8 +68,11 @@ G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
     
     
     G4double energyDeposited = aStep->GetTotalEnergyDeposit();
+
+    
+
     if (process->GetProcessName() == "hadElastic" &&
-        track->GetDefinition()->GetParticleName() == "neutron"){
+        particleName == "neutron" && parentID == 0 ){
    
 
         int Z = -1;
@@ -66,26 +84,52 @@ G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
     }
 
     // If Geant4 doesn't provide the target nucleus, fall back to Xe
-    if (Z < 0) Z = 54;
+    if (Z < 0 && volName == "LXe") Z = 54;
 
     if (Z == 54){ 
-       
+        
         analysisManager->FillH2(0, fGlobalTime, energyDeposited/keV);
     }
-    else if (Z == 1)   analysisManager->FillH2(1, fGlobalTime, energyDeposited/keV);
-    else             analysisManager->FillH2(0, fGlobalTime, energyDeposited/keV) ;
-  }
-    /*
-   //Recoil Energy deposits 
-    if (procName == "hadElastic") {
-        if ( energyDeposited/keV > 1 ){
-            analysisManager->FillH2(0, fGlobalTime, energyDeposited/keV);
+    else if (Z == 1 && volName == "LXe")  {
+        if (!gotTi){
+        ti = fGlobalTime;
+        gotTi = true;
         }
-   }
-    */
-     //Edep 
+        analysisManager->FillH2(1, fGlobalTime, energyDeposited/keV);
+    }
     
 
+    if ((Z == 1 || Z == 6) && volName == "Reflect"){
+        if (!gotTf){
+            tf = fGlobalTime;
+            gotTf = true;
+        }
+        analysisManager->FillH2(2, fGlobalTime, energyDeposited/keV);
+        
+    }
+    if(gotTi && gotTf && !filledTof){
+        Tof = tf - ti;
+        analysisManager->FillH1(1, Tof);
+        filledTof = true;
+    }    
+    
+
+
+  }
+    
+
+    
+
+    
+   
+   
+   
+    if(volName == "LXe"){
+        fEnteredTarget = true;
+    }
+  
+    
+    
      
   
     return true;
@@ -95,10 +139,9 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent *)
 {
     G4AnalysisManager *analysisManager = G4AnalysisManager::Instance();
     G4int eventID = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
-
-
-    analysisManager->FillNtupleIColumn(0, 1, eventID);
-    analysisManager->AddNtupleRow(0);
-
-
+    
+    if (gotTi && gotTf) {
+        analysisManager->FillNtupleIColumn(0, 1, eventID);
+        analysisManager->AddNtupleRow(0);
+    }
 }
