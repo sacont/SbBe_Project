@@ -33,12 +33,29 @@ private:
     G4double fTotalEnergyDeposited;
     G4double fEdepPVT;
 
-    G4double ti;
+    G4double tiH;
+    G4double tiXe;
     G4double tf;
     G4double Tof;
-    bool gotTi;
-    bool gotTf;
-    bool filledTof;
+    G4bool gotTiH;
+    G4bool gotTiXe;
+    G4bool filledTofH;
+    G4bool filledTofXe;
+    G4bool gotTf;
+    
+
+    //Edep in LXe vs Time of FLight Variables 
+
+    G4double tElasticLXe; //time when neutron had Elastic Collision
+    G4double edepElasticLXe; //deposited energy
+    G4bool gotElasticLXe; //found Elastic Collision
+
+    G4double tEnterReflect; //time when entered Reflect
+    G4bool gotReflectEntry; //Found Reflect Entry
+    G4bool filledPair; //Prevents multiple filling per event
+
+
+
     bool fEnteredTarget = false;
     
 };

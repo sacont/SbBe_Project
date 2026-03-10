@@ -22,9 +22,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   //////////////////World Construction/////////////////////
   
   //Dimension Constants
-  G4double xWorld = 1.5 * m;
-  G4double yWorld = 1.5 * m;
-  G4double zWorld = 1.5 * m;
+  G4double xWorld = 2.5 * m;
+  G4double yWorld = 2.5 * m;
+  G4double zWorld = 2.5 * m;
   
   
   //World Material
@@ -40,7 +40,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   
   //Dimensions and Material Constants
   double inch = 2.54 * cm;
-  G4double env_sizeXY = 100 * cm, env_sizeZ = 100 * cm;
+  G4double env_sizeXY = 200 * cm, env_sizeZ = 200 * cm;
   G4Material* env_mat = nist->FindOrBuildMaterial("G4_AIR");
 
 
@@ -102,7 +102,6 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
 
   //Solid - Logic - Placement
-  // 1) Make a rotation matrix
   auto rot = new G4RotationMatrix();
 
   // Example: 
@@ -113,7 +112,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
   G4Tubs* solidReflect = new G4Tubs("solidReflect", rIn_Reflect, rOut_Reflect, hz_Reflect, 0.*deg, 360.*deg);
   logicReflect = new G4LogicalVolume(solidReflect, EJ309, "logicReflect");
-  G4VPhysicalVolume* physReflect = new G4PVPlacement(rot, G4ThreeVector(50 *cm , 0.0*cm,0), logicReflect, "Reflect", logicEnv, false, 0, checkOverlaps);
+  G4VPhysicalVolume* physReflect = new G4PVPlacement(rot, G4ThreeVector(50 *cm , 20.0*cm,0), logicReflect, "Reflect", logicEnv, false, 0, checkOverlaps);
 
 
 

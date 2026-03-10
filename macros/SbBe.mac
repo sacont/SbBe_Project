@@ -9,7 +9,7 @@
 
 # Mono energy
 /gps/ene/type Mono
-/gps/ene/mono 24 keV
+/gps/ene/mono 6000 keV
 /gps/time 0 ns
 # Position distribution (point source at origin)
 /gps/pos/type Point

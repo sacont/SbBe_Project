@@ -25,19 +25,27 @@ RunAction::RunAction()
 
     /////////////////2D Histo//////////////////////
     //0 Histo2D
-    analysisManager->CreateH2("EdepVsToFXenon", "Energy Deposited vs Time of Flight", 500, 80, 1000, 500, 0 , 1) ; 
+    //analysisManager->CreateH2("EdepVsToFXenon", "Energy Deposited vs Time of Flight", 500, 80, 150, 500, 0 , 1) ; 
+    analysisManager->CreateH2("EdepVsToFXenon", "Energy Deposited vs Time of Flight", 500, 0, 50, 500, 0 , 120) ; 
     analysisManager->SetH2XAxisTitle(0, "ToF(ns)");
     analysisManager->SetH2YAxisTitle(0, "Edep (keV)");
     
     //1 Histo2D
-    analysisManager->CreateH2("EdepVsToFHydrogen", "Energy Deposited vs Time of Flight", 500, 86, 1000, 500, 0 , 30) ; 
+    //analysisManager->CreateH2("EdepVsToFHydrogen", "Energy Deposited vs Time of Flight", 500, 80, 150, 500, 0 , 30) ;
+    analysisManager->CreateH2("EdepVsToFHydrogen", "Energy Deposited vs Time of Flight", 500, 0, 50, 500, 0 , 120) ;  
     analysisManager->SetH2XAxisTitle(1, "ToF(ns)");
     analysisManager->SetH2YAxisTitle(1, "Edep (keV)");
     //2 Histo2D
-    analysisManager->CreateH2("EdepVsToFEJ309", "Energy Deposited vs Time of Flight", 1000, 308., 1000, 1000, 0 , 30) ; 
+    //analysisManager->CreateH2("EdepVsToFEJ309", "Energy Deposited vs Time of Flight", 500, 0, 1000, 500, 0 , 30) ; 
+    analysisManager->CreateH2("EdepVsToFEJ309", "Energy Deposited vs Time of Flight", 500, 0, 200, 500, 0 , 125) ; 
     analysisManager->SetH2XAxisTitle(2, "ToF(ns)");
     analysisManager->SetH2YAxisTitle(2, "Edep (keV)");
 
+    //3 Histo2D
+    //analysisManager->CreateH2("EdepVsToLXe", "Energy Deposited vs Time of Flight", 300, 200, 1000, 300, 0 , 1) ; 
+    analysisManager->CreateH2("EdepVsToLXe", "Energy Deposited vs Time of Flight", 300, 0, 200, 300, 0 , 100) ; 
+    analysisManager->SetH2XAxisTitle(3, "ToF(ns)");
+    analysisManager->SetH2YAxisTitle(3, "Edep (keV)");
 
 
 
@@ -69,7 +77,7 @@ void RunAction::BeginOfRunAction(const G4Run *run)
     std::stringstream strRunID;
     strRunID << runID;
 
-    analysisManager->OpenFile("0degree" + strRunID.str() + ".root");
+    analysisManager->OpenFile("outputTof6MeV" + strRunID.str() + ".root");
     
 
 }

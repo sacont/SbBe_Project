@@ -4,10 +4,14 @@
 SensitiveDetector::SensitiveDetector(G4String name) : G4VSensitiveDetector(name)
 {
     fTotalEnergyDeposited = 0.;
-    ti = 0;
-    tf = 0;
-    Tof = 0;
-    gotTi = gotTf = filledTof = false;
+   
+    //ToF vs Edep on LXe 
+    tElasticLXe = 0.;
+    edepElasticLXe = 0.;
+    gotElasticLXe = false;
+    tEnterReflect = 0.;
+    gotReflectEntry = false;
+    filledPair = false;
 }
 
 SensitiveDetector::~SensitiveDetector()
@@ -17,12 +21,18 @@ SensitiveDetector::~SensitiveDetector()
 
 void SensitiveDetector::Initialize(G4HCofThisEvent *)
 {
-    ti = 0;
-    tf = 0;
-    Tof = 0;
-    gotTi = gotTf = filledTof = false;
+  
     fTotalEnergyDeposited = 0. ;
     fEnteredTarget = false;
+
+    tElasticLXe = 0.;
+    edepElasticLXe = 0.;
+    gotElasticLXe = false;
+
+    tEnterReflect = 0.;
+    gotReflectEntry = false;
+
+    filledPair = false;
 
 }
 
@@ -70,7 +80,7 @@ G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
     G4double energyDeposited = aStep->GetTotalEnergyDeposit();
 
     
-
+    /////Edep vs Global time at various volumes
     if (process->GetProcessName() == "hadElastic" &&
         particleName == "neutron" && parentID == 0 ){
    
@@ -82,7 +92,6 @@ G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
       const G4Nucleus* nuc = hadProc->GetTargetNucleus();
       if (nuc) Z = nuc->GetZ_asInt();
     }
-
     // If Geant4 doesn't provide the target nucleus, fall back to Xe
     if (Z < 0 && volName == "LXe") Z = 54;
 
@@ -91,41 +100,69 @@ G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
         analysisManager->FillH2(0, fGlobalTime, energyDeposited/keV);
     }
     else if (Z == 1 && volName == "LXe")  {
-        if (!gotTi){
-        ti = fGlobalTime;
-        gotTi = true;
-        }
+        
         analysisManager->FillH2(1, fGlobalTime, energyDeposited/keV);
     }
     
 
     if ((Z == 1 || Z == 6) && volName == "Reflect"){
-        if (!gotTf){
-            tf = fGlobalTime;
-            gotTf = true;
-        }
+        
         analysisManager->FillH2(2, fGlobalTime, energyDeposited/keV);
         
-    }
-    if(gotTi && gotTf && !filledTof){
-        Tof = tf - ti;
-        analysisManager->FillH1(1, Tof);
-        filledTof = true;
-    }    
-    
-
+    }  
 
   }
-    
 
-    
 
-    
-   
-   
-   
-    if(volName == "LXe"){
-        fEnteredTarget = true;
+// ----------------------------------------
+    // 1. Record FIRST elastic collision in LXe
+    // ----------------------------------------
+    if (!gotElasticLXe &&
+        particleName == "neutron" &&
+        parentID == 0 &&
+        volName == "LXe" &&
+        energyDeposited > 0. &&
+        process &&
+        process->GetProcessName() == "hadElastic" )
+    {
+        edepElasticLXe = energyDeposited;
+        tElasticLXe = fGlobalTime;
+        gotElasticLXe = true;
+        
+    }
+
+    // ----------------------------------------
+    // 2. Record FIRST entry into Reflect
+    //    but only after LXe elastic happened
+    // ----------------------------------------
+    if (gotElasticLXe && !gotReflectEntry &&
+        particleName == "neutron" &&
+        parentID == 0 &&
+        volName == "Reflect" &&
+        stepStatus == fGeomBoundary
+        && process->GetProcessName() == "hadElastic"
+        )
+    {
+        
+        
+        tEnterReflect = fGlobalTime;
+        gotReflectEntry = true;
+    }
+
+    // ----------------------------------------
+    // 3. Fill once when both are available
+    // ----------------------------------------
+    if (gotElasticLXe && gotReflectEntry && !filledPair)
+    {
+        G4double tof = tEnterReflect - tElasticLXe;
+
+        if (tof >= 0.)
+        {
+            analysisManager->FillH2(3, tof / ns, edepElasticLXe / keV );
+            filledPair = true;
+            
+            //G4cout << edepElasticLXe << G4endl;
+        }
     }
   
     
@@ -140,7 +177,7 @@ void SensitiveDetector::EndOfEvent(G4HCofThisEvent *)
     G4AnalysisManager *analysisManager = G4AnalysisManager::Instance();
     G4int eventID = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
     
-    if (gotTi && gotTf) {
+    if (gotTiH && gotTf) {
         analysisManager->FillNtupleIColumn(0, 1, eventID);
         analysisManager->AddNtupleRow(0);
     }
