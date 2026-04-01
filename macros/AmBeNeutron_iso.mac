@@ -5,30 +5,17 @@
 /event/verbose 0
 /gps/verbose 0
 
-#/control/getEnv RAND1
-#/control/getEnv RAND2
-
-#/random/setSeeds 60675 54037
-
+# Realistic isotropic AmBe source placed at the current lead-shielded source position.
 /gps/particle neutron
-
 /gps/pos/type Point
-# Realistic isotropic source option:
-# /gps/pos/centre -50 0 0 cm
-# /gps/ang/type iso
-
-# Directed AmBe source option to match the current lead-shielded source geometry
-# in DetectorConstruction.cc and improve tagged statistics.
 /gps/pos/centre -50 0 0 cm
-/gps/direction 1 0 0
-#/gps/ang/mintheta 0 deg
-#/gps/ang/maxtheta 90 deg
+/gps/ang/type iso
+
 /gps/ene/type Arb
 /gps/hist/type arb
-#Data below from geant4 forum Zach Hartwig link:
-#http://hypernews.slac.stanford.edu/HyperNews/geant4/get/eventtrackmanage/1236.html?inline=-1
+# Data below from geant4 forum Zach Hartwig link:
+# http://hypernews.slac.stanford.edu/HyperNews/geant4/get/eventtrackmanage/1236.html?inline=-1
 #                E (MeV) Rel. Yield
-#
 /gps/hist/point    0.11 0.905149
 /gps/hist/point    0.33 0.848238
 /gps/hist/point    0.54 0.761518
@@ -82,13 +69,8 @@
 /gps/hist/point    10.8 0.009837
 /gps/hist/inter Lin
 
-#/control/getEnv HEDIST
-#/control/getEnv HEORIENT
-#/control/getEnv RUNNUM
-
 # Example naming pattern:
-# dopant_source_dist_lead_stats
-# /analysis/setFileName H_AmBe_50cm_Pb1p5_100M
-#/analysis/setFileName H_AmBe_50cm_Pb1p5_10M
-/analysis/setFileName H_AmBe_50cm_30deg_Pb1p5_1M
-/run/beamOn 1000000
+# dopant_source_dist_lead_stats_mode
+# /analysis/setFileName H_AmBe_50cm_Pb1p5_100M_iso
+/analysis/setFileName H_AmBe_100cm_Pb1p5_1B_iso
+/run/beamOn 1000000000

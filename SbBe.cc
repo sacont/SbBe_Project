@@ -1,5 +1,7 @@
 
 #include <iostream>
+#include <cstdlib>
+#include <thread>
 
 
 #include "G4RunManagerFactory.hh"
@@ -28,9 +30,27 @@ int main(int argc, char** argv)
     ui = new G4UIExecutive(argc, argv);
   }
 
-  
   auto runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
-  runManager->SetNumberOfThreads(12);
+  unsigned int requestedThreads = std::thread::hardware_concurrency();
+  if (requestedThreads == 0) {
+    requestedThreads = 12;
+  }
+
+  if (const char* envThreads = std::getenv("SBBE_THREADS")) {
+    const long parsed = std::strtol(envThreads, nullptr, 10);
+    if (parsed > 0) {
+      requestedThreads = static_cast<unsigned int>(parsed);
+    }
+  }
+
+  if (argc >= 3) {
+    const long parsed = std::strtol(argv[2], nullptr, 10);
+    if (parsed > 0) {
+      requestedThreads = static_cast<unsigned int>(parsed);
+    }
+  }
+
+  runManager->SetNumberOfThreads(static_cast<G4int>(requestedThreads));
   G4cout << "THREADS: " << runManager->GetNumberOfThreads() << G4endl;
   
   // Physics List

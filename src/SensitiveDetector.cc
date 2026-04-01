@@ -1,184 +1,199 @@
 #include "SensitiveDetector.hh"
 
+#include "G4AnalysisManager.hh"
+#include "G4Step.hh"
+#include "G4Track.hh"
+#include "G4StepPoint.hh"
+#include "G4VProcess.hh"
+#include "G4ParticleDefinition.hh"
+#include "G4TouchableHandle.hh"
+#include "G4VPhysicalVolume.hh"
+#include "G4HCofThisEvent.hh"
+#include "G4SystemOfUnits.hh"
 
-SensitiveDetector::SensitiveDetector(G4String name) : G4VSensitiveDetector(name)
+#include "G4HadronicProcess.hh"
+#include "G4Nucleus.hh"
+
+SensitiveDetector::SensitiveDetector(G4String name)
+  : G4VSensitiveDetector(name),
+    fTotalEnergyDeposited(0.),
+    fRecoilEnergy(0.),
+    fScatterTime(-1.),
+    fEJ309EnterTime(-1.),
+    fRecoilZ(-1),
+    fEdepXeInclusive(0.),
+    fEdepDopantInclusive(0.),
+    fGotLXeScatter(false),
+    fGotEJ309Entry(false),
+    fFilledPair(false)
+{}
+
+SensitiveDetector::~SensitiveDetector() {}
+
+namespace {
+G4int GetTargetAtomicNumber(const G4VProcess* process)
+{
+    if (!process) {
+        return -1;
+    }
+
+    const auto* hadProc = dynamic_cast<const G4HadronicProcess*>(process);
+    if (!hadProc) {
+        return -1;
+    }
+
+    const G4Nucleus* nucleus = hadProc->GetTargetNucleus();
+    return nucleus ? nucleus->GetZ_asInt() : -1;
+}
+}
+
+void SensitiveDetector::Initialize(G4HCofThisEvent*)
 {
     fTotalEnergyDeposited = 0.;
-   
-    //ToF vs Edep on LXe 
-    tElasticLXe = 0.;
-    edepElasticLXe = 0.;
-    gotElasticLXe = false;
-    tEnterReflect = 0.;
-    gotReflectEntry = false;
-    filledPair = false;
+
+    fRecoilEnergy = 0.;
+    fScatterTime = -1.;
+    fEJ309EnterTime = -1.;
+    fRecoilZ = -1;
+
+    fEdepXeInclusive = 0.;
+    fEdepDopantInclusive  = 0.;
+
+    fGotLXeScatter = false;
+    fGotEJ309Entry = false;
+    fFilledPair = false;
 }
 
-SensitiveDetector::~SensitiveDetector()
+G4bool SensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
+    auto* analysisManager = G4AnalysisManager::Instance();
 
-}
+    G4StepPoint* preStepPoint  = aStep->GetPreStepPoint();
+    G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
+    G4Track* track             = aStep->GetTrack();
 
-void SensitiveDetector::Initialize(G4HCofThisEvent *)
-{
-  
-    fTotalEnergyDeposited = 0. ;
-    fEnteredTarget = false;
+    if (!preStepPoint || !postStepPoint || !track) return true;
 
-    tElasticLXe = 0.;
-    edepElasticLXe = 0.;
-    gotElasticLXe = false;
+    const G4VPhysicalVolume* prePV  = preStepPoint->GetTouchableHandle()->GetVolume();
+    const G4VPhysicalVolume* postPV = postStepPoint->GetTouchableHandle()->GetVolume();
 
-    tEnterReflect = 0.;
-    gotReflectEntry = false;
+    const G4String preVolName  = (prePV)  ? prePV->GetName()  : "";
+    const G4String postVolName = (postPV) ? postPV->GetName() : "";
 
-    filledPair = false;
+    const G4String particleName = track->GetDefinition()->GetParticleName();
+    const G4int parentID = track->GetParentID();
 
-}
-
-
-G4bool SensitiveDetector::ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist)
-{
-     
-    G4AnalysisManager *analysisManager = G4AnalysisManager::Instance();
-
-    G4int eventID = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
-    
-    G4StepPoint *preStepPoint = aStep->GetPreStepPoint();
-    G4StepPoint* postStep = aStep->GetPostStepPoint();
-
-    G4ThreeVector prePos  = preStepPoint->GetPosition();
-    G4ThreeVector postPos = postStep->GetPosition();
-    G4double x = postPos.x()/cm;
-    G4double y = postPos.y()/cm;
-    G4double z = postPos.z()/cm;
-
-
-    G4double fGlobalTime = preStepPoint->GetGlobalTime();
-    G4Track* track = aStep->GetTrack();
-    G4StepStatus stepStatus = preStepPoint->GetStepStatus();
-    const G4VProcess* process = postStep->GetProcessDefinedStep();
-    G4String procName = process->GetProcessName();
-    G4String volName = aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName(); 
-    
-    G4int trackID = track->GetTrackID();
-    G4int parentID = track->GetParentID();
-    G4int pdgEncoding = track->GetDefinition()->GetPDGEncoding();
-    G4double deltaT = aStep->GetDeltaTime();
-    G4ThreeVector posNeutron = preStepPoint->GetPosition();
-    G4ThreeVector momNeutron = preStepPoint->GetMomentum();
-    G4double fmomNeutron = momNeutron.mag();
-    G4double fenergy = (1 * eV);
-    G4int pdg = aStep->GetTrack()->GetDefinition()->GetPDGEncoding();
-    
-    G4double KE = preStepPoint->GetKineticEnergy();
-    G4double KEev = KE / eV;
-    G4String particleName = aStep->GetTrack()->GetDefinition()->GetParticleName();
-    auto secondaries = aStep->GetSecondaryInCurrentStep();
-    
-    
-    G4double energyDeposited = aStep->GetTotalEnergyDeposit();
-
-    
-    /////Edep vs Global time at various volumes
-    if (process->GetProcessName() == "hadElastic" &&
-        particleName == "neutron" && parentID == 0 ){
-   
-
-        int Z = -1;
-
-     const auto* hadProc = dynamic_cast<const G4HadronicProcess*>(process);
-    if (hadProc) {
-      const G4Nucleus* nuc = hadProc->GetTargetNucleus();
-      if (nuc) Z = nuc->GetZ_asInt();
+    const G4double edep = aStep->GetTotalEnergyDeposit();
+    if (edep > 0.) {
+        fTotalEnergyDeposited += edep;
     }
-    // If Geant4 doesn't provide the target nucleus, fall back to Xe
-    if (Z < 0 && volName == "LXe") Z = 54;
 
-    if (Z == 54){ 
-        
-        analysisManager->FillH2(0, fGlobalTime, energyDeposited/keV);
-    }
-    else if (Z == 1 && volName == "LXe")  {
-        
-        analysisManager->FillH2(1, fGlobalTime, energyDeposited/keV);
-    }
-    
+    const G4VProcess* process = postStepPoint->GetProcessDefinedStep();
 
-    if ((Z == 1 || Z == 6) && volName == "Reflect"){
-        
-        analysisManager->FillH2(2, fGlobalTime, energyDeposited/keV);
-        
-    }  
-
-  }
-
-
-// ----------------------------------------
-    // 1. Record FIRST elastic collision in LXe
-    // ----------------------------------------
-    if (!gotElasticLXe &&
-        particleName == "neutron" &&
+    // ------------------------------------------------------------
+    // A) Inclusive LXe recoil spectrum:
+    //    accumulate ALL primary-neutron hadElastic recoils in LXe
+    // ------------------------------------------------------------
+    if (particleName == "neutron" &&
         parentID == 0 &&
-        volName == "LXe" &&
-        energyDeposited > 0. &&
+        preVolName == "LXe" &&
         process &&
-        process->GetProcessName() == "hadElastic" )
+        process->GetProcessName() == "hadElastic")
     {
-        edepElasticLXe = energyDeposited;
-        tElasticLXe = fGlobalTime;
-        gotElasticLXe = true;
-        
+        const G4double preKE  = preStepPoint->GetKineticEnergy();
+        const G4double postKE = postStepPoint->GetKineticEnergy();
+
+        G4double recoilKE = preKE - postKE;
+        if (recoilKE < 0.) recoilKE = 0.;
+
+        const G4int Z = GetTargetAtomicNumber(process);
+
+        if (Z == 54)             fEdepXeInclusive += recoilKE;
+        else if (Z == 1 || Z == 2) fEdepDopantInclusive += recoilKE;
     }
 
-    // ----------------------------------------
-    // 2. Record FIRST entry into Reflect
-    //    but only after LXe elastic happened
-    // ----------------------------------------
-    if (gotElasticLXe && !gotReflectEntry &&
+    // ------------------------------------------------------------
+    // B) Tagged sample:
+    //    first LXe elastic scatter only, later entering EJ309
+    // ------------------------------------------------------------
+    if (!fGotLXeScatter &&
         particleName == "neutron" &&
         parentID == 0 &&
-        volName == "Reflect" &&
-        stepStatus == fGeomBoundary
-        && process->GetProcessName() == "hadElastic"
-        )
+        preVolName == "LXe" &&
+        process &&
+        process->GetProcessName() == "hadElastic")
     {
-        
-        
-        tEnterReflect = fGlobalTime;
-        gotReflectEntry = true;
-    }
+        const G4double preKE  = preStepPoint->GetKineticEnergy();
+        const G4double postKE = postStepPoint->GetKineticEnergy();
 
-    // ----------------------------------------
-    // 3. Fill once when both are available
-    // ----------------------------------------
-    if (gotElasticLXe && gotReflectEntry && !filledPair)
-    {
-        G4double tof = tEnterReflect - tElasticLXe;
+        G4double recoilKE = preKE - postKE;
+        if (recoilKE < 0.) recoilKE = 0.;
 
-        if (tof >= 0.)
-        {
-            analysisManager->FillH2(3, tof / ns, edepElasticLXe / keV );
-            filledPair = true;
-            
-            //G4cout << edepElasticLXe << G4endl;
+        const G4int Z = GetTargetAtomicNumber(process);
+
+        if (recoilKE > 0. && (Z == 54 || Z == 1 || Z == 2)) {
+            fScatterTime   = postStepPoint->GetGlobalTime();
+            fRecoilEnergy  = recoilKE;
+            fRecoilZ       = Z;
+            fGotLXeScatter = true;
         }
     }
-  
-    
-    
-     
-  
+
+    // First entry of same neutron into EJ309
+    if (fGotLXeScatter && !fGotEJ309Entry &&
+        particleName == "neutron" &&
+        parentID == 0 &&
+        preVolName == "EJ309" &&
+        postVolName == "EJ309" &&
+        preStepPoint->GetStepStatus() == fGeomBoundary)
+    {
+        fEJ309EnterTime = preStepPoint->GetGlobalTime();
+        fGotEJ309Entry = true;
+    }
+
+    // Fill tagged once
+    if (fGotLXeScatter && fGotEJ309Entry && !fFilledPair)
+    {
+        const G4double tof = fEJ309EnterTime - fScatterTime;
+
+        if (tof >= 0.) {
+            analysisManager->FillH1(1, tof / ns);  // tagged ToF all
+            analysisManager->FillH2(2, tof / ns, fRecoilEnergy / keV);
+            analysisManager->FillH2(3, tof / ns, fRecoilEnergy / keV);
+
+            if (fRecoilZ == 54) {
+                analysisManager->FillH2(0, tof / ns, fRecoilEnergy / keV);
+                analysisManager->FillH2(4, tof / ns, fRecoilEnergy / keV);
+                analysisManager->FillH1(2, tof / ns);
+                analysisManager->FillH1(4, fRecoilEnergy / keV);
+                fFilledPair = true;
+            }
+            else if (fRecoilZ == 1 || fRecoilZ == 2) {
+                analysisManager->FillH2(1, tof / ns, fRecoilEnergy / keV);
+                analysisManager->FillH2(5, tof / ns, fRecoilEnergy / keV);
+                analysisManager->FillH1(3, tof / ns);
+                analysisManager->FillH1(5, fRecoilEnergy / keV);
+                fFilledPair = true;
+            }
+        }
+    }
+
     return true;
 }
 
-void SensitiveDetector::EndOfEvent(G4HCofThisEvent *)
+void SensitiveDetector::EndOfEvent(G4HCofThisEvent*)
 {
-    G4AnalysisManager *analysisManager = G4AnalysisManager::Instance();
-    G4int eventID = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
-    
-    if (gotTiH && gotTf) {
-        analysisManager->FillNtupleIColumn(0, 1, eventID);
-        analysisManager->AddNtupleRow(0);
+    auto* analysisManager = G4AnalysisManager::Instance();
+
+    if (fTotalEnergyDeposited > 0.) {
+        analysisManager->FillH1(0, fTotalEnergyDeposited / keV);
+    }
+
+    // inclusive event-level recoil sums in H-doped LXe, meaning any recoils in HLXe cylinder
+    if (fEdepXeInclusive > 0.) {
+        analysisManager->FillH1(6, fEdepXeInclusive / keV);
+    }
+    if (fEdepDopantInclusive > 0.) {
+        analysisManager->FillH1(7, fEdepDopantInclusive / keV);
     }
 }

@@ -2,43 +2,23 @@
 #define DETECTORCONSTRUCTION_HH
 
 #include "G4VUserDetectorConstruction.hh"
-#include "G4Box.hh"
-#include "G4Tubs.hh"
-#include "G4SubtractionSolid.hh"
 
-#include "G4LogicalVolume.hh"
-#include "G4VPhysicalVolume.hh"
-#include "G4PVPlacement.hh"
-#include "G4Material.hh"
+class G4VPhysicalVolume;
+class G4LogicalVolume;
 
-#include "G4NistManager.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4UnitsTable.hh"
-
-#include "G4VisAttributes.hh"
-#include "G4Color.hh"
-#include "G4SDManager.hh"
-#include "SensitiveDetector.hh"
-#include "G4LogicalBorderSurface.hh"
-#include "G4OpticalSurface.hh"
-#include "G4UnionSolid.hh"
 class DetectorConstruction : public G4VUserDetectorConstruction
 {
 public:
     DetectorConstruction();
     virtual ~DetectorConstruction();
 
-    virtual G4VPhysicalVolume *Construct();
+    virtual G4VPhysicalVolume* Construct() override;
+    virtual void ConstructSDandField() override;
 
 private:
-    
-
-    G4LogicalVolume *logicLXe;
-    G4LogicalVolume *logicReflect;
-    
-    virtual void ConstructSDandField();
-
+    G4LogicalVolume* logicLXe = nullptr;
+    G4LogicalVolume* logicReflect = nullptr;
+    G4LogicalVolume* logicLead = nullptr;
 };
-
 
 #endif
