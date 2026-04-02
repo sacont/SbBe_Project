@@ -4,7 +4,12 @@
 #include "G4Run.hh"
 #include "G4ios.hh"
 
+#include <cstdlib>
 #include <sstream>
+#include <vector>
+
+std::vector<G4String> RunAction::fCompletedRunFiles;
+G4String RunAction::fMergedFileStem;
 
 RunAction::RunAction()
 {
@@ -144,6 +149,7 @@ void RunAction::BeginOfRunAction(const G4Run *run)
     if (fileStem.empty()) {
         fileStem = "output";
     }
+    fMergedFileStem = fileStem;
 
     std::stringstream strRunID;
     strRunID << fileStem << "_" << runID << ".root";
@@ -155,9 +161,47 @@ void RunAction::EndOfRunAction(const G4Run *run)
 {
     G4AnalysisManager *analysisManager = G4AnalysisManager::Instance();
 
+    G4String outputFile = analysisManager->GetFileName();
     analysisManager->Write();
     analysisManager->CloseFile();
 
+    if (!outputFile.empty()) {
+        fCompletedRunFiles.push_back(outputFile);
+    }
+
     G4int runId = run->GetRunID();
     G4cout << "Finishing run " << runId << G4endl;
+}
+
+void RunAction::MergeCompletedRunFiles()
+{
+    if (fCompletedRunFiles.size() <= 1 || fMergedFileStem.empty()) {
+        return;
+    }
+
+    G4String mergedFile = fMergedFileStem + ".root";
+    G4String command = "hadd -f \"" + mergedFile + "\"";
+    for (const auto &file : fCompletedRunFiles) {
+        command += " \"" + file + "\"";
+    }
+
+    G4cout << "Merging " << fCompletedRunFiles.size()
+           << " run files into " << mergedFile << G4endl;
+
+    const int status = std::system(command.c_str());
+    if (status != 0) {
+        G4cerr << "Automatic merge failed. You can merge manually with:" << G4endl;
+        G4cerr << command << G4endl;
+    }
+    else {
+        for (const auto &file : fCompletedRunFiles) {
+            if (std::remove(file.c_str()) != 0) {
+                G4cerr << "Merged successfully, but could not delete temporary file: "
+                       << file << G4endl;
+            }
+        }
+    }
+
+    fCompletedRunFiles.clear();
+    fMergedFileStem.clear();
 }

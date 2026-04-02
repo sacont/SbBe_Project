@@ -16,6 +16,7 @@
 #include "ProPhysicsList.hh"
 #include "DetectorConstruction.hh"
 #include "ActionInit.hh"
+#include "MyRunAction.hh"
 
 
 
@@ -76,6 +77,7 @@ int main(int argc, char** argv)
     G4String command = "/control/execute ";
     G4String fileName = argv[1];
     UImanager->ApplyCommand(command + fileName);
+    RunAction::MergeCompletedRunFiles();
   }
   else {
     // interactive mode
