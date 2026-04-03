@@ -72,11 +72,12 @@
 # Example naming pattern:
 # dopant_source_dist_lead_stats_mode
 # /analysis/setFileName H_AmBe_50cm_Pb1p5_100M_iso
-/analysis/setFileName H_AmBe_50cm_30deg_10B_iso
+#/analysis/setFileName H_AmBe_50cm_30deg_10B_iso
+/analysis/setFileName test-iso
 # Geant4's /run/beamOn argument is a 32-bit integer, so 10B events
 # must be split across multiple runs. Total here remains 10,000,000,000.
-/run/beamOn 2000000000
-/run/beamOn 2000000000
-/run/beamOn 2000000000
-/run/beamOn 2000000000
-/run/beamOn 2000000000
+#/run/beamOn 2000000000
+#/run/beamOn 2000000000
+#/run/beamOn 2000000000
+#/run/beamOn 2000000000
+/run/beamOn 10000000

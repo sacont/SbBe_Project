@@ -75,6 +75,20 @@ RunAction::RunAction()
     analysisManager->SetH1XAxisTitle(7, "Recoil Energy (keV)");
     analysisManager->SetH1YAxisTitle(7, "Counts");
 
+    // H1(8): all primary-neutron EJ309 entry times, independent of LXe tagging
+    analysisManager->CreateH1("EJ309EntryTime_All",
+                              "Primary neutron entry time into EJ309",
+                              1000, 0., 1000.);
+    analysisManager->SetH1XAxisTitle(8, "Entry Time (ns)");
+    analysisManager->SetH1YAxisTitle(8, "Counts");
+
+    // H1(9): tagged ToF for every EJ309 re-entry after the first LXe scatter
+    analysisManager->CreateH1("ToF_AllTaggedEntries",
+                              "Tagged neutron ToF for every EJ309 entry after first LXe scatter",
+                              1000, 0., 1000.);
+    analysisManager->SetH1XAxisTitle(9, "ToF (ns)");
+    analysisManager->SetH1YAxisTitle(9, "Counts");
+
 
     ////////////////// 2D Histograms //////////////////
 
@@ -125,6 +139,38 @@ RunAction::RunAction()
                               400, 0., 11000.);
     analysisManager->SetH2XAxisTitle(5, "ToF (ns)");
     analysisManager->SetH2YAxisTitle(5, "Edep (keV)");
+
+    // H2(6): tagged deposited energy vs neutron ToF for every EJ309 re-entry
+    analysisManager->CreateH2("EdepVsToF_AllTaggedEntries",
+                              "Tagged LXe deposited energy vs neutron ToF for every EJ309 entry",
+                              1000, 0., 1000.,
+                              400, 0., 400.);
+    analysisManager->SetH2XAxisTitle(6, "ToF (ns)");
+    analysisManager->SetH2YAxisTitle(6, "Edep (keV)");
+
+    // H2(7): first tagged LXe-scatter step deposited energy vs neutron ToF
+    analysisManager->CreateH2("StepEdepVsToF_Tagged",
+                              "First tagged LXe-scatter step deposited energy vs neutron ToF",
+                              500, 0., 500.,
+                              300, 0., 400.);
+    analysisManager->SetH2XAxisTitle(7, "ToF (ns)");
+    analysisManager->SetH2YAxisTitle(7, "Step Edep (keV)");
+
+    // H2(8): first tagged LXe-scatter step deposited energy vs neutron ToF for Xe recoils
+    analysisManager->CreateH2("StepEdepVsToF_Xe",
+                              "First tagged LXe-scatter step deposited energy vs neutron ToF for Xe recoils",
+                              500, 0., 500.,
+                              300, 0., 400.);
+    analysisManager->SetH2XAxisTitle(8, "ToF (ns)");
+    analysisManager->SetH2YAxisTitle(8, "Step Edep (keV)");
+
+    // H2(9): first tagged LXe-scatter step deposited energy vs neutron ToF for dopant recoils
+    analysisManager->CreateH2("StepEdepVsToF_H",
+                              "First tagged LXe-scatter step deposited energy vs neutron ToF for dopant recoils",
+                              500, 0., 500.,
+                              400, 0., 11000.);
+    analysisManager->SetH2XAxisTitle(9, "ToF (ns)");
+    analysisManager->SetH2YAxisTitle(9, "Step Edep (keV)");
 
 
     ////////////////// Ntuple //////////////////

@@ -1,3 +1,8 @@
+#changing the parameters in Macro
+
+/SbBe/det/setEJ309Distance 200 cm
+/SbBe/det/setEJ309Angle 30 deg
+
 /run/initialize
 
 /control/verbose 0
@@ -90,5 +95,6 @@
 # dopant_source_dist_lead_stats
 # /analysis/setFileName H_AmBe_50cm_Pb1p5_100M
 #/analysis/setFileName H_AmBe_50cm_Pb1p5_10M
-/analysis/setFileName H_AmBe_50cm_30deg_Pb1p5_1M
-/run/beamOn 1000000
+#/analysis/setFileName H_AmBe_50cm_30deg_Pb1p5_1M
+/analysis/setFileName test
+/run/beamOn 10000000

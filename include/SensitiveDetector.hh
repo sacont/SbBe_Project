@@ -5,6 +5,8 @@
 #include "G4String.hh"
 #include "globals.hh"
 
+#include <vector>
+
 class G4Step;
 class G4TouchableHistory;
 class G4HCofThisEvent;
@@ -20,11 +22,13 @@ public:
     virtual void EndOfEvent(G4HCofThisEvent*) override;
 
 private:
-    G4double fTotalEnergyDeposited;
+    G4double fTotalLXeEnergyDeposited;
 
     // tagged first-scatter quantities
     G4double fRecoilEnergy;
+    G4double fFirstScatterLXeEdep;
     G4double fScatterTime;
+    G4double fFirstTaggedToF;
     G4double fEJ309EnterTime;
     G4int    fRecoilZ;
 
@@ -35,6 +39,8 @@ private:
     G4bool fGotLXeScatter;
     G4bool fGotEJ309Entry;
     G4bool fFilledPair;
+
+    std::vector<G4double> fTaggedEntryToFs;
 };
 
 #endif
