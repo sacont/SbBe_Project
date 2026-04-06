@@ -3,6 +3,7 @@
 
 #include "G4VUserActionInitialization.hh"
 
+#include "EventAction.hh"
 #include "PrimaryGenerator.hh"
 #include "MyRunAction.hh"
 class ActionInit : public G4VUserActionInitialization

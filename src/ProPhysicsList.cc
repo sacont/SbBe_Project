@@ -14,7 +14,6 @@ ProPhysicsList::ProPhysicsList()
 
     // Optional: neutron tracking cuts
     RegisterPhysics(new G4NeutronTrackingCut());
-    RegisterPhysics(new G4HadronPhysicsQGSP_BERT_HP());
     
     //Optical
     RegisterPhysics(new G4OpticalPhysics());

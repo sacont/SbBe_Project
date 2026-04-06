@@ -7,8 +7,10 @@
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4LogicalVolume.hh"
+#include "G4GenericMessenger.hh"
 #include "G4PVPlacement.hh"
 #include "G4RotationMatrix.hh"
+#include "G4RunManager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
@@ -18,10 +20,41 @@
 
 DetectorConstruction::DetectorConstruction()
 {
+  DefineCommands();
 }
 
 DetectorConstruction::~DetectorConstruction()
 {
+  delete fMessenger;
+}
+
+void DetectorConstruction::DefineCommands()
+{
+  fMessenger = new G4GenericMessenger(this, "/SbBe/det/", "Detector control");
+
+  auto& distanceCmd = fMessenger->DeclareMethodWithUnit(
+      "setEJ309Distance", "cm", &DetectorConstruction::SetEJ309Distance,
+      "Set the EJ309 center distance from the LXe target.");
+  distanceCmd.SetParameterName("distance", false);
+  distanceCmd.SetRange("distance > 0.");
+
+  auto& angleCmd = fMessenger->DeclareMethodWithUnit(
+      "setEJ309Angle", "deg", &DetectorConstruction::SetEJ309Angle,
+      "Set the EJ309 polar angle relative to the +x beam axis.");
+  angleCmd.SetParameterName("angle", false);
+  angleCmd.SetRange("angle >= 0. && angle <= 180.");
+}
+
+void DetectorConstruction::SetEJ309Distance(G4double value)
+{
+  fScintDistance = value / cm;
+  G4RunManager::GetRunManager()->ReinitializeGeometry();
+}
+
+void DetectorConstruction::SetEJ309Angle(G4double value)
+{
+  fScintAngleDeg = value / deg;
+  G4RunManager::GetRunManager()->ReinitializeGeometry();
 }
 
 G4VPhysicalVolume *DetectorConstruction::Construct()
@@ -46,7 +79,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   //////////////////Envelope/////////////////////
 
   double inch = 2.54 * cm;
-  G4double env_sizeXY = 200 * cm, env_sizeZ = 200 * cm;
+  G4double env_sizeXY = 400 * cm, env_sizeZ = 400 * cm;
   G4Material* env_mat = nist->FindOrBuildMaterial("G4_AIR");
 
   auto solidEnv = new G4Box("Envelope", 0.5 * env_sizeXY, 0.5 * env_sizeXY, 0.5 * env_sizeZ);
@@ -94,56 +127,56 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
   ///////////////////Lead around source/////////////////////
 
-  G4Material* leadMat = nist->FindOrBuildMaterial("G4_Pb");
+//   G4Material* leadMat = nist->FindOrBuildMaterial("G4_Pb");
 
-  const G4ThreeVector sourcePosition(-50.0 * cm, 0., 0.);
-  const G4double leadThickness = 1.5 * cm;
-  const G4double sourceCavityHalfSize = 1.0 * cm;
-  const G4double sourceCavityHalfLength = 1.0 * cm;
+//   const G4ThreeVector sourcePosition(-50.0 * cm, 0., 0.);
+//   const G4double leadThickness = 1.5 * cm;
+//   const G4double sourceCavityHalfSize = 1.0 * cm;
+//   const G4double sourceCavityHalfLength = 1.0 * cm;
 
-  const G4double sideWallHalfX = sourceCavityHalfLength;
-  const G4double sideWallHalfYZ = sourceCavityHalfSize;
-  const G4double sideWallHalfThickness = 0.5 * leadThickness;
+//   const G4double sideWallHalfX = sourceCavityHalfLength;
+//   const G4double sideWallHalfYZ = sourceCavityHalfSize;
+//   const G4double sideWallHalfThickness = 0.5 * leadThickness;
 
-  G4Box* solidLeadSide = new G4Box("solidLeadSide",
-                                   sideWallHalfX,
-                                   sideWallHalfThickness,
-                                   sideWallHalfYZ);
-  logicLead = new G4LogicalVolume(solidLeadSide, leadMat, "logicLead");
+//   G4Box* solidLeadSide = new G4Box("solidLeadSide",
+//                                    sideWallHalfX,
+//                                    sideWallHalfThickness,
+//                                    sideWallHalfYZ);
+//   logicLead = new G4LogicalVolume(solidLeadSide, leadMat, "logicLead");
 
-  new G4PVPlacement(nullptr,
-                    sourcePosition + G4ThreeVector(0., sourceCavityHalfSize + sideWallHalfThickness, 0.),
-                    logicLead, "LeadTop", logicEnv, false, 0, checkOverlaps);
+//   new G4PVPlacement(nullptr,
+//                     sourcePosition + G4ThreeVector(0., sourceCavityHalfSize + sideWallHalfThickness, 0.),
+//                     logicLead, "LeadTop", logicEnv, false, 0, checkOverlaps);
 
-  new G4PVPlacement(nullptr,
-                    sourcePosition + G4ThreeVector(0., -(sourceCavityHalfSize + sideWallHalfThickness), 0.),
-                    logicLead, "LeadBottom", logicEnv, false, 1, checkOverlaps);
+//   new G4PVPlacement(nullptr,
+//                     sourcePosition + G4ThreeVector(0., -(sourceCavityHalfSize + sideWallHalfThickness), 0.),
+//                     logicLead, "LeadBottom", logicEnv, false, 1, checkOverlaps);
 
-  G4Box* solidLeadZWall = new G4Box("solidLeadZWall",
-                                    sideWallHalfX,
-                                    sideWallHalfYZ,
-                                    sideWallHalfThickness);
-  G4LogicalVolume* logicLeadZWall = new G4LogicalVolume(solidLeadZWall, leadMat, "logicLeadZWall");
+//   G4Box* solidLeadZWall = new G4Box("solidLeadZWall",
+//                                     sideWallHalfX,
+//                                     sideWallHalfYZ,
+//                                     sideWallHalfThickness);
+//   G4LogicalVolume* logicLeadZWall = new G4LogicalVolume(solidLeadZWall, leadMat, "logicLeadZWall");
 
-  new G4PVPlacement(nullptr,
-                    sourcePosition + G4ThreeVector(0., 0., sourceCavityHalfSize + sideWallHalfThickness),
-                    logicLeadZWall, "LeadPlusZ", logicEnv, false, 2, checkOverlaps);
-  new G4PVPlacement(nullptr,
-                    sourcePosition + G4ThreeVector(0., 0., -(sourceCavityHalfSize + sideWallHalfThickness)),
-                    logicLeadZWall, "LeadMinusZ", logicEnv, false, 3, checkOverlaps);
+//   new G4PVPlacement(nullptr,
+//                     sourcePosition + G4ThreeVector(0., 0., sourceCavityHalfSize + sideWallHalfThickness),
+//                     logicLeadZWall, "LeadPlusZ", logicEnv, false, 2, checkOverlaps);
+//   new G4PVPlacement(nullptr,
+//                     sourcePosition + G4ThreeVector(0., 0., -(sourceCavityHalfSize + sideWallHalfThickness)),
+//                     logicLeadZWall, "LeadMinusZ", logicEnv, false, 3, checkOverlaps);
 
-  G4Box* solidLeadXWall = new G4Box("solidLeadXWall",
-                                    sideWallHalfThickness,
-                                    sourceCavityHalfSize + leadThickness,
-                                    sourceCavityHalfSize + leadThickness);
-  G4LogicalVolume* logicLeadXWall = new G4LogicalVolume(solidLeadXWall, leadMat, "logicLeadXWall");
+//   G4Box* solidLeadXWall = new G4Box("solidLeadXWall",
+//                                     sideWallHalfThickness,
+//                                     sourceCavityHalfSize + leadThickness,
+//                                     sourceCavityHalfSize + leadThickness);
+//   G4LogicalVolume* logicLeadXWall = new G4LogicalVolume(solidLeadXWall, leadMat, "logicLeadXWall");
 
-  new G4PVPlacement(nullptr,
-                    sourcePosition + G4ThreeVector(-(sourceCavityHalfLength + sideWallHalfThickness), 0., 0.),
-                    logicLeadXWall, "LeadBack", logicEnv, false, 4, checkOverlaps);
-  new G4PVPlacement(nullptr,
-                    sourcePosition + G4ThreeVector(sourceCavityHalfLength + sideWallHalfThickness, 0., 0.),
-                    logicLeadXWall, "LeadFront", logicEnv, false, 5, checkOverlaps);
+//   new G4PVPlacement(nullptr,
+//                     sourcePosition + G4ThreeVector(-(sourceCavityHalfLength + sideWallHalfThickness), 0., 0.),
+//                     logicLeadXWall, "LeadBack", logicEnv, false, 4, checkOverlaps);
+//   new G4PVPlacement(nullptr,
+//                     sourcePosition + G4ThreeVector(sourceCavityHalfLength + sideWallHalfThickness, 0., 0.),
+//                     logicLeadXWall, "LeadFront", logicEnv, false, 5, checkOverlaps);
 
   ///////////////////EJ309 cylinder/////////////////////
 
@@ -161,8 +194,8 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   EJ309->AddElement(elH, 0.094);
 
   // Match the slide geometry: the EJ309 is placed downward from the beam axis (+x).
-  const G4double scintDistance = 50.0 * cm;
-  const G4double scintAngleFromBeam = 30.0 * deg;
+  const G4double scintDistance = fScintDistance * cm;
+  const G4double scintAngleFromBeam = fScintAngleDeg * deg;
   const G4ThreeVector scintPosition(scintDistance * std::cos(scintAngleFromBeam),
                                     0.,
                                     -scintDistance * std::sin(scintAngleFromBeam));
@@ -183,21 +216,27 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
   Yellow->SetForceSolid(true);
   SlateBlue->SetForceSolid(true);
-  LeadGray->SetForceSolid(true);
+//   LeadGray->SetForceSolid(true);
 
   logicLXe->SetVisAttributes(Yellow);
   logicReflect->SetVisAttributes(SlateBlue);
-  logicLead->SetVisAttributes(LeadGray);
-  logicLeadZWall->SetVisAttributes(LeadGray);
-  logicLeadXWall->SetVisAttributes(LeadGray);
+//   logicLead->SetVisAttributes(LeadGray);
+//   logicLeadZWall->SetVisAttributes(LeadGray);
+//   logicLeadXWall->SetVisAttributes(LeadGray);
 
   return physWorld;
 }
 
 void DetectorConstruction::ConstructSDandField()
 {
-    SensitiveDetector *sensDet = new SensitiveDetector("SensitiveDetector");
-    G4SDManager::GetSDMpointer()->AddNewDetector(sensDet);
+    auto* sdManager = G4SDManager::GetSDMpointer();
+    auto* sensDet =
+        static_cast<SensitiveDetector*>(sdManager->FindSensitiveDetector("SensitiveDetector", false));
+
+    if (!sensDet) {
+        sensDet = new SensitiveDetector("SensitiveDetector");
+        sdManager->AddNewDetector(sensDet);
+    }
 
     logicLXe->SetSensitiveDetector(sensDet);
     logicReflect->SetSensitiveDetector(sensDet);

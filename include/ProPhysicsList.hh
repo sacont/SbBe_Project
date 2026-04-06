@@ -7,7 +7,6 @@
 #include "G4DecayPhysics.hh"
 #include "G4HadronElasticPhysicsHP.hh"
 #include "G4NeutronTrackingCut.hh"
-#include "G4HadronPhysicsQGSP_BERT_HP.hh"
 #include "G4OpticalPhysics.hh"
 #include "G4Scintillation.hh"
 
