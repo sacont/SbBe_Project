@@ -125,58 +125,56 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   G4VPhysicalVolume* physLXe =
       new G4PVPlacement(nullptr, G4ThreeVector(0, 0, 0), logicLXe, "LXe", logicEnv, false, 0, checkOverlaps);
 
-  ///////////////////Lead around source/////////////////////
+  ///////////////////Lead collimator around source/////////////////////
 
-//   G4Material* leadMat = nist->FindOrBuildMaterial("G4_Pb");
+  G4Material* leadMat = nist->FindOrBuildMaterial("G4_Pb");
 
-//   const G4ThreeVector sourcePosition(-50.0 * cm, 0., 0.);
-//   const G4double leadThickness = 1.5 * cm;
-//   const G4double sourceCavityHalfSize = 1.0 * cm;
-//   const G4double sourceCavityHalfLength = 1.0 * cm;
+  const G4ThreeVector sourcePosition(-50.0 * cm, 0., 0.);
+  const G4double leadThickness = 1.5 * cm;
+  const G4double sourceCavityHalfSize = 1.0 * cm;
+  const G4double sourceCavityHalfLength = 1.0 * cm;
 
-//   const G4double sideWallHalfX = sourceCavityHalfLength;
-//   const G4double sideWallHalfYZ = sourceCavityHalfSize;
-//   const G4double sideWallHalfThickness = 0.5 * leadThickness;
+  const G4double sideWallHalfX = sourceCavityHalfLength;
+  const G4double sideWallHalfYZ = sourceCavityHalfSize;
+  const G4double sideWallHalfThickness = 0.5 * leadThickness;
 
-//   G4Box* solidLeadSide = new G4Box("solidLeadSide",
-//                                    sideWallHalfX,
-//                                    sideWallHalfThickness,
-//                                    sideWallHalfYZ);
-//   logicLead = new G4LogicalVolume(solidLeadSide, leadMat, "logicLead");
+  G4Box* solidLeadSide = new G4Box("solidLeadSide",
+                                   sideWallHalfX,
+                                   sideWallHalfThickness,
+                                   sideWallHalfYZ);
+  logicLead = new G4LogicalVolume(solidLeadSide, leadMat, "logicLead");
 
-//   new G4PVPlacement(nullptr,
-//                     sourcePosition + G4ThreeVector(0., sourceCavityHalfSize + sideWallHalfThickness, 0.),
-//                     logicLead, "LeadTop", logicEnv, false, 0, checkOverlaps);
+  new G4PVPlacement(nullptr,
+                    sourcePosition + G4ThreeVector(0., sourceCavityHalfSize + sideWallHalfThickness, 0.),
+                    logicLead, "LeadTop", logicEnv, false, 0, checkOverlaps);
 
-//   new G4PVPlacement(nullptr,
-//                     sourcePosition + G4ThreeVector(0., -(sourceCavityHalfSize + sideWallHalfThickness), 0.),
-//                     logicLead, "LeadBottom", logicEnv, false, 1, checkOverlaps);
+  new G4PVPlacement(nullptr,
+                    sourcePosition + G4ThreeVector(0., -(sourceCavityHalfSize + sideWallHalfThickness), 0.),
+                    logicLead, "LeadBottom", logicEnv, false, 1, checkOverlaps);
 
-//   G4Box* solidLeadZWall = new G4Box("solidLeadZWall",
-//                                     sideWallHalfX,
-//                                     sideWallHalfYZ,
-//                                     sideWallHalfThickness);
-//   G4LogicalVolume* logicLeadZWall = new G4LogicalVolume(solidLeadZWall, leadMat, "logicLeadZWall");
+  G4Box* solidLeadZWall = new G4Box("solidLeadZWall",
+                                    sideWallHalfX,
+                                    sideWallHalfYZ,
+                                    sideWallHalfThickness);
+  G4LogicalVolume* logicLeadZWall = new G4LogicalVolume(solidLeadZWall, leadMat, "logicLeadZWall");
 
-//   new G4PVPlacement(nullptr,
-//                     sourcePosition + G4ThreeVector(0., 0., sourceCavityHalfSize + sideWallHalfThickness),
-//                     logicLeadZWall, "LeadPlusZ", logicEnv, false, 2, checkOverlaps);
-//   new G4PVPlacement(nullptr,
-//                     sourcePosition + G4ThreeVector(0., 0., -(sourceCavityHalfSize + sideWallHalfThickness)),
-//                     logicLeadZWall, "LeadMinusZ", logicEnv, false, 3, checkOverlaps);
+  new G4PVPlacement(nullptr,
+                    sourcePosition + G4ThreeVector(0., 0., sourceCavityHalfSize + sideWallHalfThickness),
+                    logicLeadZWall, "LeadPlusZ", logicEnv, false, 2, checkOverlaps);
+  new G4PVPlacement(nullptr,
+                    sourcePosition + G4ThreeVector(0., 0., -(sourceCavityHalfSize + sideWallHalfThickness)),
+                    logicLeadZWall, "LeadMinusZ", logicEnv, false, 3, checkOverlaps);
 
-//   G4Box* solidLeadXWall = new G4Box("solidLeadXWall",
-//                                     sideWallHalfThickness,
-//                                     sourceCavityHalfSize + leadThickness,
-//                                     sourceCavityHalfSize + leadThickness);
-//   G4LogicalVolume* logicLeadXWall = new G4LogicalVolume(solidLeadXWall, leadMat, "logicLeadXWall");
+  G4Box* solidLeadBack = new G4Box("solidLeadBack",
+                                   sideWallHalfThickness,
+                                   sourceCavityHalfSize + leadThickness,
+                                   sourceCavityHalfSize + leadThickness);
+  G4LogicalVolume* logicLeadBack = new G4LogicalVolume(solidLeadBack, leadMat, "logicLeadBack");
 
-//   new G4PVPlacement(nullptr,
-//                     sourcePosition + G4ThreeVector(-(sourceCavityHalfLength + sideWallHalfThickness), 0., 0.),
-//                     logicLeadXWall, "LeadBack", logicEnv, false, 4, checkOverlaps);
-//   new G4PVPlacement(nullptr,
-//                     sourcePosition + G4ThreeVector(sourceCavityHalfLength + sideWallHalfThickness, 0., 0.),
-//                     logicLeadXWall, "LeadFront", logicEnv, false, 5, checkOverlaps);
+  // Leave the +x face open so the source is collimated toward the TPC at the origin.
+  new G4PVPlacement(nullptr,
+                    sourcePosition + G4ThreeVector(-(sourceCavityHalfLength + sideWallHalfThickness), 0., 0.),
+                    logicLeadBack, "LeadBack", logicEnv, false, 4, checkOverlaps);
 
   ///////////////////EJ309 cylinder/////////////////////
 
@@ -216,13 +214,13 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
   Yellow->SetForceSolid(true);
   SlateBlue->SetForceSolid(true);
-//   LeadGray->SetForceSolid(true);
+  LeadGray->SetForceSolid(true);
 
   logicLXe->SetVisAttributes(Yellow);
   logicReflect->SetVisAttributes(SlateBlue);
-//   logicLead->SetVisAttributes(LeadGray);
-//   logicLeadZWall->SetVisAttributes(LeadGray);
-//   logicLeadXWall->SetVisAttributes(LeadGray);
+  logicLead->SetVisAttributes(LeadGray);
+  logicLeadZWall->SetVisAttributes(LeadGray);
+  logicLeadBack->SetVisAttributes(LeadGray);
 
   return physWorld;
 }
